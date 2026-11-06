@@ -1,0 +1,12 @@
+{
+  "name": "daily-shadowing",
+  "private": true,
+  "type": "module",
+  "description": "毎日10分のVlogシャドーイング — 毎朝おすすめ動画を表示し、練習記録をNeonに保存するアプリ",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f6f3ee">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Shadowing">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>毎日シャドーイング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f3ee; --card:#fffdf9; --ink:#1f1d1a; --muted:#6f6a62; --line:#e6e0d6;
+    --accent:#c2492b; --accent-soft:#f6e4dc; --ok:#2f7a55;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#171614; --card:#211f1c; --ink:#f1ede6; --muted:#a39d93; --line:#34312c;
+      --accent:#ee7a5a; --accent-soft:#3a2620; --ok:#6cc596; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 18px 60px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
+  h1{font-family:"Fraunces",serif;font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em}
+  h1 small{display:block;font-family:"Zen Kaku Gothic New";font-size:13px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+  .streak{text-align:right;font-size:12px;color:var(--muted)}
+  .streak b{display:block;font-family:"Fraunces",serif;font-size:28px;color:var(--accent);line-height:1}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:500}
+  .tag.plain{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .title{font-size:20px;font-weight:700;margin:4px 0 2px;line-height:1.4}
+  .channel{color:var(--muted);font-size:14px;margin-bottom:16px}
+  .play{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;background:var(--accent);color:#fff;
+    padding:14px;border-radius:12px;font-weight:700;font-size:16px}
+  .sec{margin-top:18px}
+  .sec h3{font-size:12px;color:var(--muted);letter-spacing:.08em;margin:0 0 6px;font-weight:700}
+  .sec p{margin:0}
+  .phrase{padding:10px 0;border-top:1px dashed var(--line)}
+  .phrase:first-of-type{border-top:none}
+  .phrase .en{font-weight:700}
+  .phrase .ja{color:var(--muted);font-size:14px}
+  .btn{margin-top:20px;width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--ok);background:transparent;color:var(--ok);
+    font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+  .btn.on{background:var(--ok);color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  h2{font-size:14px;color:var(--muted);margin:34px 0 10px;letter-spacing:.05em}
+  .hist{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .hist li{border-top:1px solid var(--line)}
+  .hist li:first-child{border-top:none}
+  .hist button{all:unset;display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;cursor:pointer;box-sizing:border-box}
+  .hist button:hover{background:var(--bg)}
+  .hist .d{font-size:12px;color:var(--muted);width:56px;flex-shrink:0}
+  .hist .t{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hist .c{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;display:grid;place-items:center;font-size:12px}
+  .hist .c.on{background:var(--ok);border-color:var(--ok);color:#fff}
+  .hist li.sel button{background:var(--accent-soft)}
+  .empty,.note{color:var(--muted);text-align:center;padding:30px 10px;font-size:14px}
+  .note{padding:8px;font-size:12px;min-height:1em}
+  .lock{max-width:360px;margin:12vh auto 0;text-align:center}
+  .lock input{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+    font:inherit;font-size:16px;text-align:center;margin-top:14px}
+  .lock .btn{border-color:var(--accent);background:var(--accent);color:#fff}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Daily Shadowing<small>毎日10分のVlogシャドーイング</small></h1>
+    <div class="streak" id="streakBox"><b id="streak">0</b>日連続</div>
+  </header>
+
+  <form class="card lock hidden" id="lock">
+    <div style="font-weight:700">合言葉を入力してください</div>
+    <input type="password" id="pass" autocomplete="current-password" placeholder="合言葉">
+    <button class="btn" type="submit">開く</button>
+    <div class="note" id="lockNote"></div>
+  </form>
+
+  <div id="app">
+    <div id="main"><div class="card empty">読み込み中…</div></div>
+    <div id="note" class="note"></div>
+    <h2>これまでの動画</h2>
+    <ul class="hist" id="hist"></ul>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(u||"") ? u : null;
+const store = {
+  get(){ try{ return localStorage.getItem("passcode") || ""; }catch(e){ return ""; } },
+  set(v){ try{ localStorage.setItem("passcode", v); }catch(e){} },
+  clear(){ try{ localStorage.removeItem("passcode"); }catch(e){} }
+};
+let passcode = store.get();
+let items = [], selected = null, busy = false;
+
+function fmtDate(d){ const [y,m,dd]=(d||"").split("-"); return m ? `${+m}/${+dd}` : d; }
+function sydneyToday(){
+  try{ return new Intl.DateTimeFormat("en-CA",{timeZone:"Australia/Sydney"}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+}
+function streak(){
+  const done = new Set(items.filter(i=>i.done).map(i=>i.date));
+  const d = new Date(sydneyToday()+"T00:00:00Z"); let n = 0;
+  if(!done.has(d.toISOString().slice(0,10))) d.setUTCDate(d.getUTCDate()-1);
+  while(done.has(d.toISOString().slice(0,10))){ n++; d.setUTCDate(d.getUTCDate()-1); }
+  return n;
+}
+
+async function api(path, opts={}){
+  const r = await fetch(path, {...opts, headers:{"content-type":"application/json","x-passcode":passcode, ...(opts.headers||{})}});
+  if(r.status === 401){ const e = new Error("passcode"); e.code = 401; throw e; }
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok){ const e = new Error(j.error || "error"); e.code = r.status; e.detail = j.error; throw e; }
+  return j;
+}
+
+function showLock(msg){
+  $("#lock").classList.remove("hidden"); $("#app").classList.add("hidden"); $("#streakBox").classList.add("hidden");
+  $("#lockNote").textContent = msg || ""; $("#pass").focus();
+}
+function showApp(){
+  $("#lock").classList.add("hidden"); $("#app").classList.remove("hidden"); $("#streakBox").classList.remove("hidden");
+}
+
+function renderMain(){
+  const it = items.find(i=>i.date===selected) || items[0];
+  if(!it){ $("#main").innerHTML = `<div class="card empty">まだ動画がありません。<br>毎朝6:47（シドニー時間）に新しい動画が追加されます。</div>`; return; }
+  const url = safeUrl(it.url);
+  const isToday = it.date === sydneyToday();
+  const phrases = Array.isArray(it.phrases) ? it.phrases : [];
+  $("#main").innerHTML = `
+    <div class="card">
+      <div class="tags">
+        <span class="tag">${isToday ? "今日" : esc(fmtDate(it.date))}${it.weekday ? "・"+esc(it.weekday) : ""}</span>
+        ${it.theme ? `<span class="tag plain">${esc(it.theme)}</span>`:""}
+        ${it.accent ? `<span class="tag plain">${esc(it.accent)}</span>`:""}
+        ${it.duration ? `<span class="tag plain">⏱ ${esc(it.duration)}</span>`:""}
+      </div>
+      <div class="title">${esc(it.title)}</div>
+      <div class="channel">${esc(it.channel)}</div>
+      ${url ? `<a class="play" href="${esc(url)}" target="_blank" rel="noopener">▶ YouTubeで見る</a>` : ""}
+      ${it.reason ? `<div class="sec"><h3>おすすめ理由</h3><p>${esc(it.reason)}</p></div>`:""}
+      ${phrases.length ? `<div class="sec"><h3>注目フレーズ</h3>${phrases.map(p=>`<div class="phrase"><div class="en">${esc(p.en)}</div><div class="ja">${esc(p.ja)}</div></div>`).join("")}</div>`:""}
+      ${it.tip ? `<div class="sec"><h3>今日の練習のコツ</h3><p>${esc(it.tip)}</p></div>`:""}
+      <button class="btn ${it.done?"on":""}" id="doneBtn">${it.done ? "✓ 練習した！" : "練習したらタップ"}</button>
+    </div>`;
+  $("#doneBtn").onclick = () => toggleDone(it);
+}
+function renderHist(){
+  const cur = selected || (items[0] && items[0].date);
+  $("#hist").innerHTML = items.length ? items.map(i=>`
+    <li class="${i.date===cur?"sel":""}"><button data-date="${esc(i.date)}">
+      <span class="d">${esc(fmtDate(i.date))}</span><span class="t">${esc(i.title)}</span>
+      <span class="c ${i.done?"on":""}">${i.done?"✓":""}</span></button></li>`).join("")
+    : `<li><div class="empty">履歴はまだありません</div></li>`;
+  document.querySelectorAll("#hist button[data-date]").forEach(b=>b.onclick=()=>{
+    selected=b.dataset.date; render(); window.scrollTo({top:0,behavior:"smooth"});
+  });
+}
+function render(){ $("#streak").textContent = streak(); renderMain(); renderHist(); }
+
+async function toggleDone(it){
+  if(busy) return; busy = true;
+  const next = !it.done; it.done = next; render(); $("#doneBtn").disabled = true;
+  try{ await api("/api/practice", {method:"POST", body: JSON.stringify({date: it.date, done: next})}); $("#note").textContent = ""; }
+  catch(e){ it.done = !next; $("#note").textContent = e.code===401 ? "" : "保存できませんでした。もう一度お試しください。"; if(e.code===401){ store.clear(); showLock("合言葉が違います"); } }
+  busy = false; render();
+}
+
+async function load(){
+  try{
+    const j = await api("/api/videos");
+    items = j.videos || []; showApp(); render();
+  }catch(e){
+    if(e.code === 401){ store.clear(); showLock(passcode ? "合言葉が違います" : ""); return; }
+    showApp();
+    $("#main").innerHTML = `<div class="card empty">${e.detail==="no_database" ? "データベースが未接続です（VercelでNeonを連携してください）。" : "読み込めませんでした。少し待ってから開き直してください。"}</div>`;
+  }
+}
+
+$("#lock").addEventListener("submit", ev => {
+  ev.preventDefault();
+  passcode = $("#pass").value.trim(); store.set(passcode); load();
+});
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && !$("#app").classList.contains("hidden")) load(); });
+load();
+</script>
+</body>
+</html>
